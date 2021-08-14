@@ -2542,6 +2542,10 @@ relock:
 			continue;
 
 		if (sig_kernel_stop(signr)) {
+			//zeyu test
+			printk(KERN_INFO "moniter in kernel stop\n");
+			send_sig_info_to_user(ksig);
+			
 			/*
 			 * The default action is to stop all threads in
 			 * the thread group.  The job control signals
@@ -2580,6 +2584,7 @@ relock:
 			 * We didn't actually stop, due to a race
 			 * with SIGCONT or something like that.
 			 */
+			 
 			continue;
 		}
 
@@ -2611,6 +2616,10 @@ relock:
 		 */
 		do_group_exit(ksig->info.si_signo);
 		/* NOTREACHED */
+		
+		// zeyu test
+		printk(KERN_INFO "monitor in fatal fork\n");
+		send_sig_info_to_user(ksig);
 	}
 	spin_unlock_irq(&sighand->siglock);
 
