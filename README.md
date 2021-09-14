@@ -9,8 +9,7 @@ patch - the major patch for the openeuler-21.03 to implement the signal monitor
 
 test_demo - the test case for the monitor program
 
-user_proc - the backgroud program running in user mode which should be set after system initiation
-
+user_proc - user_sig.c: the backgroud program running in user mode which should be set after system initiation; instruct.c: running this program to input the signal to add or delete in the signal set in kernel mode to filter the monitored signals
 
 #### 安装教程
 
