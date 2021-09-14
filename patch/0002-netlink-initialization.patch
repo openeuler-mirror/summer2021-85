@@ -1,0 +1,50 @@
+From 643e1013e549247d74b164af138de81d4c2cf195 Mon Sep 17 00:00:00 2001
+From: tatataeki <shengzeyu19_98@163.com>
+Date: Tue, 14 Sep 2021 17:59:57 +0800
+Subject: [PATCH 2/5] netlink initialization add the function to initiate the
+ data structure of netlink for communication
+
+Signed-off-by: tatataeki <shengzeyu19_98@163.com>
+---
+ kernel/signal.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/kernel/signal.c b/kernel/signal.c
+index 63783912a98c..75b5d4db08a3 100644
+--- a/kernel/signal.c
++++ b/kernel/signal.c
+@@ -4655,3 +4655,31 @@ void kdb_send_sig(struct task_struct *t, int sig)
+ struct sock *sig_monitor_sk = NULL;
+ 
+ extern struct net init_net;
++
++void recv_callback(struct sk_buff *skb);
++
++struct netlink_kernel_cfg sig_cfg = 
++{
++    .input = recv_callback,
++};
++
++int netlink_sig_init(void)
++{
++    sig_monitor_sk = (struct sock*)netlink_kernel_create(&init_net, NETLINK_SIG_MONITOR, &sig_cfg);
++    if(sig_monitor_sk == NULL){
++        printk(KERN_ERR "SIGNAL MONITOR: create netlink socket error.\n");
++        return 1;
++    }
++    printk("SIGNAL MONITOR: create netlink socket ok.\n");
++    return 0;
++}
++
++/*
++ * prepare_for_nt_send - Prepare for the netlink struct to send signal
++ * info to user program. The function below check the info in the signal
++ * list when handling them, and send the filtered signal info.
++ */
++void prepare_for_nt_send(void) {
++	if(!sig_monitor_sk)
++		netlink_sig_init();
++}
+-- 
+2.27.0
+

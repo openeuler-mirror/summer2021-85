@@ -1,0 +1,47 @@
+From 5a2bf4d8979e97b8edde4154149d5e0ce28713f6 Mon Sep 17 00:00:00 2001
+From: tatataeki <shengzeyu19_98@163.com>
+Date: Tue, 14 Sep 2021 19:26:17 +0800
+Subject: [PATCH 5/5] add the monitor code insert the monitor function into the
+ signal sending stage to get all signals generated and pick the filtered
+ signals to log in the user mode
+
+Signed-off-by: tatataeki <shengzeyu19_98@163.com>
+---
+ kernel/signal.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/kernel/signal.c b/kernel/signal.c
+index 250670a44e41..34af3f62ab08 100644
+--- a/kernel/signal.c
++++ b/kernel/signal.c
+@@ -1071,6 +1071,11 @@ static inline bool legacy_queue(struct sigpending *signals, int sig)
+ {
+ 	return (sig < SIGRTMIN) && sigismember(&signals->signal, sig);
+ }
++
++void prepare_for_nt_send(void);
++
++void send_sig_info_to_user(int sender, int recver, int signr);
++
+ // data structure to filter the signal to be monitored
+ struct my_sig_set{
+ 	bool init;
+@@ -1080,6 +1085,15 @@ struct my_sig_set{
+ static int __send_signal(int sig, struct kernel_siginfo *info, struct task_struct *t,
+ 			enum pid_type type, bool force)
+ {
++	//initiate the protocol of the netlink to send message
++	prepare_for_nt_send();
++
++	if(m_sig_set.init) {
++		printk(KERN_INFO "moniter in kernel stop\n");
++		if(!sigismember(&m_sig_set.sig_set, sig))
++			send_sig_info_to_user(current->pid, sig, t->pid);
++	}
++	
+ 	struct sigpending *pending;
+ 	struct sigqueue *q;
+ 	int override_rlimit;
+-- 
+2.27.0
+

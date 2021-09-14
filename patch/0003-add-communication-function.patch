@@ -1,0 +1,59 @@
+From 1d9458a318cc80895a95f758aa85a6182ffa2653 Mon Sep 17 00:00:00 2001
+From: tatataeki <shengzeyu19_98@163.com>
+Date: Tue, 14 Sep 2021 19:02:39 +0800
+Subject: [PATCH 3/5] add communication function functions use netlink to
+ transmit signal information to user mode
+
+Signed-off-by: tatataeki <shengzeyu19_98@163.com>
+---
+ kernel/signal.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/kernel/signal.c b/kernel/signal.c
+index 75b5d4db08a3..89f84a2559d6 100644
+--- a/kernel/signal.c
++++ b/kernel/signal.c
+@@ -4683,3 +4683,40 @@ void prepare_for_nt_send(void) {
+ 	if(!sig_monitor_sk)
+ 		netlink_sig_init();
+ }
++
++/*
++ * send_nlmsg - This function help to get the integer value from the netlink message
++ */
++void send_nlmsg(int8_t *message, uint16_t len, int pid)
++{
++    struct sk_buff *nl_skb;
++    struct nlmsghdr *nlh;
++
++    int ret;
++
++    nl_skb = nlmsg_new(len, GFP_ATOMIC);
++    if(!nl_skb)
++    {
++        printk("netlink_alloc_skb error\n");
++        return;
++    }
++    nlh = nlmsg_put(nl_skb, 0, 0, NETLINK_SIG_MONITOR, len, 0);
++    if(nlh == NULL)
++    {
++        nlmsg_free(nl_skb);
++        return;
++    }
++    memcpy(nlmsg_data(nlh), message, len);
++
++    ret = netlink_unicast(sig_monitor_sk, nl_skb, SIG_RECV_PID, MSG_DONTWAIT);
++	if(ret == 0)
++		printk("unicast success\n");
++	else
++		printk("unicast failed with return value %d\n", ret);
++}
++
++void send_sig_info_to_user(int sender, int recver, int signr) {
++    char sig_send_buf[MAX_MSGSIZE];
++	snprintf(sig_send_buf, sizeof(sig_send_buf)-1, "process %d send a signal, which is %d to process %d\n", sender, recver, signr);
++	send_nlmsg(sig_send_buf,  strlen(sig_send_buf), SIG_RECV_PID);
++}
+-- 
+2.27.0
+
