@@ -5,11 +5,11 @@ https://gitee.com/openeuler-competition/summer-2021/issues/I3HHH2
 
 #### 软件架构
 
-kernel - the major patch for the openeuler-21.03 to implement the signal monitor
+patch - the major patch for the openeuler-21.03 to implement the signal monitor
 
 test_demo - the test case for the monitor program
 
-user_proc - the backgroud program running in user state which should be set after system initiation
+user_proc - the backgroud program running in user mode which should be set after system initiation
 
 
 #### 安装教程
