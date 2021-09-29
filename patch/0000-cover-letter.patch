@@ -1,15 +1,14 @@
-From 5a2bf4d8979e97b8edde4154149d5e0ce28713f6 Mon Sep 17 00:00:00 2001
+From 66c6910b58242ef20693547bac4fba1d9dc49b5f Mon Sep 17 00:00:00 2001
 From: tatataeki <shengzeyu19_98@163.com>
-Date: Tue, 14 Sep 2021 19:31:04 +0800
-Subject: [PATCH 0/5] *** SUBJECT HERE ***
+Date: Wed, 29 Sep 2021 21:12:33 +0800
+Subject: [PATCH 0/4] *** SUBJECT HERE ***
 
 *** BLURB HERE ***
 
-tatataeki (5):
-  add some basic statement pull in some header file essential for the
-    communication and add some definition for the netlink protocol
-  netlink initialization add the function to initiate the data structure
-    of netlink for communication
+tatataeki (4):
+  signal monitor initialization add some basic statements essential for
+    the communication and add the function to initiate the data
+    structure of netlink for communication
   add communication function functions use netlink to transmit signal
     information to user mode
   filter the signal to be monitored use the signal set structure to
@@ -18,8 +17,8 @@ tatataeki (5):
     sending stage to get all signals generated and pick the filtered
     signals to log in the user mode
 
- kernel/signal.c | 166 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 166 insertions(+)
+ kernel/signal.c | 155 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 155 insertions(+)
 
 -- 
 2.27.0

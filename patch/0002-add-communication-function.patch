@@ -1,0 +1,65 @@
+From a20f7afea097afb17d8074878146281486c2366c Mon Sep 17 00:00:00 2001
+From: tatataeki <shengzeyu19_98@163.com>
+Date: Wed, 29 Sep 2021 20:59:05 +0800
+Subject: [PATCH 2/4] add communication function functions use netlink to
+ transmit signal information to user mode
+
+Signed-off-by: tatataeki <shengzeyu19_98@163.com>
+---
+ kernel/signal.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/kernel/signal.c b/kernel/signal.c
+index e0175bf72463..5e2a5a172632 100644
+--- a/kernel/signal.c
++++ b/kernel/signal.c
+@@ -4642,6 +4642,10 @@ void kdb_send_sig(struct task_struct *t, int sig)
+ 
+ #define NETLINK_SIG_MONITOR 25
+ 
++#define SIG_RECV_PID 100
++
++#define MAX_MSGSIZE 100
++
+ struct sock *sig_monitor_sk = NULL;
+ 
+ extern struct net init_net;
+@@ -4677,3 +4681,35 @@ void prepare_for_nt_send(void) {
+ 	}
+ }
+ 
++/*
++ * send_nlmsg - This function help to send the message of signal monitored to user space
++ */
++void send_nlmsg(int8_t *message, uint16_t len, int pid)
++{
++	struct sk_buff *nl_skb;
++	struct nlmsghdr *nlh;
++
++	int ret;
++
++	nl_skb = nlmsg_new(len, GFP_ATOMIC);
++	if(!nl_skb)
++	{
++		printk("netlink_alloc_skb error\n");
++		return;
++	}
++	nlh = nlmsg_put(nl_skb, 0, 0, NETLINK_SIG_MONITOR, len, 0);
++	if(nlh == NULL)
++	{
++        	nlmsg_free(nl_skb);
++        	return;
++	}
++	memcpy(nlmsg_data(nlh), message, len);
++
++	ret = netlink_unicast(sig_monitor_sk, nl_skb, SIG_RECV_PID, MSG_DONTWAIT);
++}
++
++void send_sig_info_to_user(int sender, int recver, int signr) {
++	char sig_send_buf[MAX_MSGSIZE];
++	snprintf(sig_send_buf, sizeof(sig_send_buf)-1, "process %d send a signal, which is %d to process %d\n", sender, recver, signr);
++	send_nlmsg(sig_send_buf,  strlen(sig_send_buf), SIG_RECV_PID);
++}
+-- 
+2.27.0
+

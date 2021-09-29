@@ -1,34 +1,35 @@
-From b4985a89d6e05a37fcd81461bfde4e5582957d8c Mon Sep 17 00:00:00 2001
+From 4d1865cff8b24d769a32c6dcb37669fe3aa44313 Mon Sep 17 00:00:00 2001
 From: tatataeki <shengzeyu19_98@163.com>
-Date: Tue, 14 Sep 2021 19:22:05 +0800
-Subject: [PATCH 4/5] filter the signal to be monitored use the signal set
+Date: Wed, 29 Sep 2021 21:05:59 +0800
+Subject: [PATCH 3/4] filter the signal to be monitored use the signal set
  structure to maintain a set of signals interested
 
 Signed-off-by: tatataeki <shengzeyu19_98@163.com>
 ---
- kernel/signal.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+ kernel/signal.c | 66 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
 
 diff --git a/kernel/signal.c b/kernel/signal.c
-index 89f84a2559d6..250670a44e41 100644
+index 5e2a5a172632..a84bba314e17 100644
 --- a/kernel/signal.c
 +++ b/kernel/signal.c
-@@ -1071,6 +1071,11 @@ static inline bool legacy_queue(struct sigpending *signals, int sig)
- {
+@@ -1070,6 +1070,11 @@ static inline bool legacy_queue(struct sigpending *signals, int sig)
  	return (sig < SIGRTMIN) && sigismember(&signals->signal, sig);
  }
-+// data structure to filter the signal to be monitored
+ 
 +struct my_sig_set{
 +	bool init;
 +	sigset_t sig_set;
 +}m_sig_set;
- 
++
  static int __send_signal(int sig, struct kernel_siginfo *info, struct task_struct *t,
  			enum pid_type type, bool force)
-@@ -4720,3 +4725,67 @@ void send_sig_info_to_user(int sender, int recver, int signr) {
+ {
+@@ -4713,3 +4718,64 @@ void send_sig_info_to_user(int sender, int recver, int signr) {
  	snprintf(sig_send_buf, sizeof(sig_send_buf)-1, "process %d send a signal, which is %d to process %d\n", sender, recver, signr);
  	send_nlmsg(sig_send_buf,  strlen(sig_send_buf), SIG_RECV_PID);
  }
++
 +/*
 + * get_recv_data - This function help to get the integer value from the netlink message
 + */
@@ -54,26 +55,23 @@ index 89f84a2559d6..250670a44e41 100644
 + */
 +void recv_callback(struct sk_buff *skb)
 +{
-+    struct nlmsghdr *nlh = NULL;
-+    void *data = NULL;
++	struct nlmsghdr *nlh = NULL;
++	void *data = NULL;
 + 
-+    if(skb->len >= nlmsg_total_size(0))
-+    {
-+		//get the data carried in nlmsg
-+        nlh = nlmsg_hdr(skb);
-+        data = NLMSG_DATA(nlh);
-+        if(data)
-+        {
-+            //printk("kernel receive data: %s\n", (int8_t *)data);
-+	    	char* recv_data = (char *)data;
-+	    	int num = get_recv_data(recv_data);
++	if(skb->len >= nlmsg_total_size(0))
++	{
++		/* get the data carried in nlmsg */
++		nlh = nlmsg_hdr(skb);
++		data = NLMSG_DATA(nlh);
++		if(data) {
++			char* recv_data = (char *)data;
++			int num = get_recv_data(recv_data);
 +
 +			if(num == 0) {
-+			    /*
++			        /*
 +				 * recevied data equals zero means to start to send data to user
 +				 * then set the global flag and empty the signal sheid set
 +				 */
-+				//printk(KERN_INFO "recv num = 0\n");
 +				m_sig_set.init = true;
 +				sigemptyset(&m_sig_set.sig_set);
 +			} else if(num>0 && num <= 64) {
@@ -89,10 +87,9 @@ index 89f84a2559d6..250670a44e41 100644
 +			} else {
 +				printk(KERN_INFO "SIGNAL MONITOR: recv a invalid signo %d\n", num);
 +			}
-+        }
-+    }
++		}
++	}
 +}
-+
 -- 
 2.27.0
 
