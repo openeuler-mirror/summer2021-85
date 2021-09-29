@@ -31,7 +31,6 @@ char* data;
 //信号捕获回调函数，向系统发送屏蔽信号数据
 void handler(int signum,siginfo_t *info,void *flag)
 {
-   // printf("signum = %d\n",signum);	//信号编号
     if(flag!=NULL)	//判断消息是否为空，不为空从info结构体中读出
     {
         printf("from pid : %d\n",info->si_pid);
